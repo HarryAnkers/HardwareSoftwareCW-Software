@@ -1,26 +1,49 @@
-predicate sorted(A:array<int>)
+//Task 1 ----
+/*
+  m
+*/
+predicate sorted(A:array<int>, l:int)
+  requires 0 < A.Length
   reads A
 {
-  true // TODO: write this predicate properly
+  forall i, j :: 0 <= l <= i <= j < A.Length ==> A[i] <= A[j]
 }
 
+predicate partition(A: array?<int>, i: int)
+  reads A
+  requires A != null
+  {
+    forall k, k' :: 0 <= k <= i < k' < A.Length ==> A[k] <= A[k']
+  }
+
 method bubble_sort(A:array<int>)
-  ensures sorted(A)
+  requires A.Length>0
+  ensures sorted(A,0)
   modifies A
 {
   var i := 0;
-  while i < A.Length {
-    var j := 1;
-    while j < A.Length - i {
-      if A[j-1] > A[j] {
-        A[j-1], A[j] := A[j], A[j-1];
-      }
-      j := j+1;
+  while i < A.Length
+    invariant sorted(A, A.Length-i)
+    invariant partition(A,A.Length-i)
+    decreases A.Length - i
+    {
+      var j := 1;
+      while j < A.Length - i 
+        invariant 0 <= i < A.Length && 1 <= j <= A.Length - i 
+        invariant sorted(A, A.Length-i)
+        invariant partition(A,A.Length-i)
+        invariant forall k :: 1 <= k <= j ==> A[k-1] <= A[j-1]
+        decreases A.Length - i - j
+        {
+          if A[j-1] > A[j] {
+            A[j-1], A[j] := A[j], A[j-1];
+          }
+        j := j+1;
     }
     i := i+1;
   }
 }
-
+/*
 method selection_sort(A:array<int>)
   ensures sorted(A)
   modifies A
@@ -77,6 +100,7 @@ method shellsort(A:array<int>)
     stride := stride / 2;
   }
 }
+*/
 
 method Main() {
   var A:array<int> := new int[7] [4,0,1,9,7,1,2];
