@@ -9,13 +9,6 @@ predicate sorted(A:array<int>, l:int)
   forall i, j :: 0 <= l <= i <= j < A.Length ==> A[i] <= A[j]
 }
 
-predicate partition(A: array?<int>, i: int)
-  reads A
-  requires A != null
-  {
-    forall k, k' :: 0 <= k <= i < k' < A.Length ==> A[k] <= A[k']
-  }
-
 method bubble_sort(A:array<int>)
   requires A.Length>0
   ensures sorted(A,0)
@@ -23,16 +16,15 @@ method bubble_sort(A:array<int>)
 {
   var i := 0;
   while i < A.Length
-    invariant sorted(A, A.Length-i)
-    invariant partition(A,A.Length-i)
+    invariant i>0 ==> sorted(A, A.Length-i)
     decreases A.Length - i
     {
       var j := 1;
       while j < A.Length - i 
         invariant 0 <= i < A.Length && 1 <= j <= A.Length - i 
-        invariant sorted(A, A.Length-i)
-        invariant partition(A,A.Length-i)
-        invariant forall k :: 1 <= k <= j ==> A[k-1] <= A[j-1]
+        invariant 0 < i < A.Length-1 ==> sorted(A, A.Length-i)
+        invariant 1 < j < A.Length - i  ==> forall k :: 0 <= k < j ==> A[j] > A[k]
+        invariant 1 < j < A.Length - i ==> forall k :: 1 < j-1 <= k < j ==> A[j] > A[k]
         decreases A.Length - i - j
         {
           if A[j-1] > A[j] {

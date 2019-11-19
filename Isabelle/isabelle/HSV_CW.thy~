@@ -1,5 +1,5 @@
-theory HSV_chapter3 imports Complex_Main begin
-
+theory HSV_CW imports Complex_Main begin
+                 
 (* We use the following command to search Isabelle's library 
    for theorems that contain a particular pattern. *)
 find_theorems "_ \<in> \<rat>"
