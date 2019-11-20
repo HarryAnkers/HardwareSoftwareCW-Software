@@ -1,4 +1,4 @@
-theory HSV_chapter5 imports Main begin
+theory HSV_CW_4_11 imports Main begin
 
 text \<open>Defining a data structure to represent fan-out-free circuits with numbered inputs\<close>
 
@@ -99,16 +99,33 @@ fun opt_NOT where
 | "opt_NOT FALSE = FALSE"
 | "opt_NOT (INPUT i) = INPUT i"
 
-text \<open>Trying out the optimiser\<close>
+text \<open>A function that checks if the optimisation happened\<close>
+
+fun NOT_check where
+  "NOT_check (NOT (NOT c)) = True"
+| "NOT_check (NOT c) = NOT_check c"
+| "NOT_check (AND c1 c2) = ((NOT_check c1) \<or> (NOT_check c2))"
+| "NOT_check (OR c1 c2) = ((NOT_check c1) \<or> (NOT_check c2))"
+| "NOT_check TRUE = False"
+| "NOT_check FALSE = False"
+| "NOT_check (INPUT i) = False"
+
+text \<open>Trying out the optimiser and show if it was optimised\<close>
 
 value "circuit1"
 value "opt_NOT circuit1"
+value "NOT_check circuit1"
 value "circuit2"
 value "opt_NOT circuit2"
+value "NOT_check circuit2"
 value "circuit3"
 value "opt_NOT circuit3"
+value "NOT_check circuit3"
 value "circuit4"
 value "opt_NOT circuit4"
+value "NOT_check circuit4"
+
+theorem "if NOT_check c
 
 text \<open>The following non-theorem is easily contradicted.\<close>
 

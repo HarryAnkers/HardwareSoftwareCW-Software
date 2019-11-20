@@ -113,6 +113,5 @@ next
       by (smt Groups.add_ac(3) Suc_eq_plus1 \<open>(6 * (k + 1) * (k + 1) + (2 * k + 1) * (k + 1) * k) div 6 = (6 * (k + 1) * (k + 1) + (2 * k + 1) * (k\<^sup>2 + k)) div 6\<close> add_Suc_right distrib_right nat_mult_1 numeral_Bit0 numeral_Bit1 numeral_code(1) semiring_normalization_rules(16) semiring_normalization_rules(23))
   show ?case
     using \<open>(6 * (k + 1) * (k + 1) + (2 * k + 1) * (k + 1) * k) div 6 = (6 * (k + 1) * (k + 1) + (2 * k + 1) * (k\<^sup>2 + k)) div 6\<close> \<open>(6 * (k + 1) * (k + 1) + (2 * k + 1) * (k\<^sup>2 + k)) div 6 = (2 * Suc k + 1) * (Suc k + 1) * Suc k div 6\<close> \<open>(6 * Suc k * Suc k + (2 * k + 1) * (k + 1) * k) div 6 = (6 * (k + 1) * (k + 1) + (2 * k + 1) * (k + 1) * k) div 6\<close> \<open>Suc k * Suc k + (2 * k + 1) * (k + 1) * k div 6 = (6 * Suc k * Suc k + (2 * k + 1) * (k + 1) * k) div 6\<close> \<open>Suc k * Suc k + pyr k = Suc k * Suc k + (2 * k + 1) * (k + 1) * k div 6\<close> \<open>pyr (Suc k) = Suc k * Suc k + pyr k\<close> by linarith
-qed            
-
+qed 
 end

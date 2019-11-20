@@ -79,16 +79,14 @@ next
   finally show ?case by assumption
 qed
 
-(* Tetrahedral numbers *)
+(* Pyr numbers *)
 fun pyr :: "nat \<Rightarrow> nat" where
-  "pyr n = (if n = 0 then 0 else n*n + pyr (n-1))"
+  "pyr n = (if n = 0 then 0 else (n)*(n) + pyr (n-1))"
 
-value "tet 0" (* 0 *)
-value "tet 1" (* 1 *)
-value "tet 2" (* 5 *)
-value "tet 3" (* 14 *)
-value "tet 4" (* 30 *)
-value "tet 5" (* 55 *)
+value "pyr 0" (* 0 *)
+value "pyr 1" (* 1 *)
+value "pyr 2" (* 5 *)
+value "pyr 3" (* 14 *)
 
 find_theorems "_ div ?x + _ div ?x"
 thm div_add
@@ -100,11 +98,14 @@ proof (induct n)
   show ?case by simp
 next
   case (Suc k) 
-
   (* induction hypothesis *)
   assume IH: "pyr k = (2*k + 1) * (k + 1) * k div 6"
 
-  (* establish useful fact and label it "**" *)
+   (* establish a useful fact and label it "*" *)
+  have "1 dvd (k + 1) * (k + 1)" by simp
+  hence *: "6 dvd (k + 1) * (k + 1) * 6" by presburger
+
+  (* establish another useful fact and label it "**" *)
   have "2 dvd (2*k + 1) * (k + 1) * k" by simp
   moreover have "3 dvd (2*k + 1) * (k + 1) * k"
   proof - 
@@ -126,19 +127,19 @@ next
   ultimately have **: "6 dvd (2*k + 1) * (k + 1) * k" by presburger
 
   (* the actual proof *)
-  have "pyr (Suc k) = (Suc k)*(Suc k) + pyr k" 
+  have "pyr (Suc k) = (Suc k)*(Suc k) + pyr k"
     by simp
-  also have "... = (k + 1) * (k + 1) + pyr k" 
-    by simp
-  also have "... = (k + 1) * (k + 1) +  ((2*k + 1) * (k + 1) * k) div 6" 
+  have "... = (Suc k)*(Suc k) + ((2*k + 1) * (k + 1) * k div 6)"
     using IH by simp
-  also have "... = ((k + 1) * (k + 1) * 6 + (2*k + 2) * (k + 1) * k) div 6" 
-    using div_add[OF * **] by simp
-  also have "... = (k + 1) * (k + 2) * (2*k + 3) div 6" 
-    by (simp add: distrib_left)
-  also have "... = (Suc k) * (Suc k + 1) * (2*Suc k + 1) div 6"
-    by (metis One_nat_def Suc_1 add.commute add_Suc_shift mult.assoc 
-        mult.commute numeral_3_eq_3 plus_1_eq_Suc)
+  have "... = (6*(Suc k)*(Suc k) + (2*k + 1) * (k + 1) * k) div 6 "
+    using div_add[OF * **] by linarith
+  have "... = (6*(k+1)*(k+1) + (2*k + 1) * (k + 1) * k) div 6 "
+    by (simp add: distrib_right power2_eq_square)
+  have "... = (6*(k+1)*(k+1) + (2*k^2 + k) * (k + 1)) div 6" try
+    by (smt add_self_div_2 distrib_right mult.assoc mult.commute nonzero_mult_div_cancel_left one_add_one power2_eq_square zero_neq_numeral)
+  have "... = (6*k^2+12*k+6 + (2*k^2 + k) * (k + 1)) div 6" try
+    by (smt distrib_left_numeral mult.assoc mult.right_neutral numeral_Bit0 one_add_one power2_eq_square power2_sum semiring_normalization_rules(23))
+  have "... = (2*(k+1) + 1) * ((k+1) + 1) * (k+1) div 6" try
   finally show ?case by assumption
 qed
 
@@ -157,31 +158,23 @@ value "Lnum 4" (* 7 *)
 value "Lnum 5" (* 9 *)
 value "Lnum 6" (* 11 *)
 
-find_theorems "_ div ?x + _ div ?x"
-thm div_add
-
 (* Proving that closed form is equivalent to recursive definition *)
-theorem "Lnum n = 2*n-1+dirac(n)"
+theorem "Lnum n = dirac(n)+(-1+(2*n))"
 proof (induct n)
   case 0
-  have "Lnum 0 = 2*0-1+dirac(0)" by simp
-  
-  show ?case by simp
-next
-  case 0
-  show ?case by simp
+  then show ?case by simp
 next
   case (Suc k) 
-
-  (* induction hypothesis *)
-  assume IH: "Lnum k = 2*k-1+dirac(k)"
-
-  (* the actual proof *)
-  have "Lnum (Suc k) = 2*(Suc k)-1+dirac(Suc k)" 
-    by simp
-  also have "... = 2*(Suc k)-1+dirac(Suc k)" 
-    by simp
-  finally show ?case by assumption
-qed
+  assume IH: "Lnum k = dirac(k)+(-1+(2*k))"
+  have "Lnum (Suc k) = dirac(Suc k)+(-1+(2*(Suc k)))"
+  proof (induct k)
+    case 0
+    then show ?case by simp
+  next
+    case (Suc k)
+    then show ?case by simp
+  qed
+  then show ?case by auto
+qed            
 
 end

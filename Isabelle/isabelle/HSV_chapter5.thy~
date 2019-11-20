@@ -44,50 +44,6 @@ value "simulate circuit2 \<rho>2"
 value "simulate circuit3 \<rho>2"
 value "simulate circuit4 \<rho>2"
 
-text \<open>A function that switches each pair of wires entering an OR or AND gate\<close>
-
-fun mirror where
-  "mirror (NOT c) = NOT (mirror c)"
-| "mirror (AND c1 c2) = AND (mirror c2) (mirror c1)"
-| "mirror (OR c1 c2) = OR (mirror c2) (mirror c1)"
-| "mirror TRUE = TRUE"
-| "mirror FALSE = FALSE"
-| "mirror (INPUT i) = INPUT i"
-
-value "circuit1"
-value "mirror circuit1"
-value "circuit2"
-value "mirror circuit2"
-
-text \<open>The following non-theorem is easily contradicted.\<close>
-
-theorem "mirror c = c" 
-  oops
-
-text \<open>Proving that mirroring doesn't affect simulation behaviour.\<close>
-
-theorem "simulate (mirror c) \<rho> = simulate c \<rho>"
-  by (induct c, auto)
-
-text \<open>A Fibonacci function that demonstrates complex recursion schemes\<close>
-
-fun f :: "nat \<Rightarrow> nat" where
-  "f (Suc (Suc n)) = f n + f (Suc n)"
-| "f (Suc 0) = 1"
-| "f 0 = 1"
-
-thm f.induct (* rule induction theorem for f *)
-
-text \<open>We need to prove a stronger version of the theorem below
-  first, in order to make the inductive step work. Just like how 
-  it often goes with loop invariants in Dafny!\<close>
-lemma helper: "f n \<ge> n \<and> f n \<ge> 1"
-  by (rule f.induct[of "\<lambda>n. f n \<ge> n \<and> f n \<ge> 1"], auto)
-
-text \<open>The nth Fibonacci number is greater than or equal to n\<close>
-theorem "f n \<ge> n" 
-  using helper by simp
-
 text \<open>A function that optimises a circuit by removing pairs of consecutive NOT gates\<close>
 
 fun opt_NOT where
@@ -118,7 +74,7 @@ theorem "opt_NOT c = c"
 text \<open>The following theorem says that the optimiser is sound.\<close>
 
 theorem opt_NOT_is_sound: "simulate (opt_NOT c) \<rho> = simulate c \<rho>"
-  by (induct rule:opt_NOT.induct, auto)
+  by (induct rule: opt_NOT.induct, auto)
 
 text \<open>The following function calculates the area of a circuit (i.e. number of gates).\<close>
 

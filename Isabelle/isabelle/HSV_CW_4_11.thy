@@ -1,4 +1,4 @@
-theory HSV_chapter5 imports Main begin
+theory HSV_CW_4_11 imports Main begin
 
 text \<open>Defining a data structure to represent fan-out-free circuits with numbered inputs\<close>
 
@@ -88,6 +88,18 @@ text \<open>The nth Fibonacci number is greater than or equal to n\<close>
 theorem "f n \<ge> n" 
   using helper by simp
 
+text \<open>A function that optimises a circuit by demorgans theorem\<close>
+
+fun optDM where
+  "optDM (AND (NOT c1) (NOT c2)) = NOT (OR (optDM c1) (optDM c2))"
+| "optDM (OR (NOT c1) (NOT c2)) = NOT (AND (optDM c1) (optDM c2))"
+| "optDM (NOT c) = NOT (optDM c)"
+| "optDM (AND c1 c2) = AND (optDM c1) (optDM c2)"
+| "optDM (OR c1 c2) = OR (optDM c1) (optDM c2)"
+| "optDM TRUE = TRUE"
+| "optDM FALSE = FALSE"
+| "optDM (INPUT i) = INPUT i"
+
 text \<open>A function that optimises a circuit by removing pairs of consecutive NOT gates\<close>
 
 fun opt_NOT where
@@ -99,16 +111,65 @@ fun opt_NOT where
 | "opt_NOT FALSE = FALSE"
 | "opt_NOT (INPUT i) = INPUT i"
 
-text \<open>Trying out the optimiser\<close>
+text \<open>A function that checks if the optimisation happened\<close>
+
+fun NOT_check where
+  "NOT_check (NOT (NOT c)) = True"
+| "NOT_check (NOT c) = NOT_check c"
+| "NOT_check (AND c1 c2) = ((NOT_check c1) \<or> (NOT_check c2))"
+| "NOT_check (OR c1 c2) = ((NOT_check c1) \<or> (NOT_check c2))"
+| "NOT_check TRUE = False"
+| "NOT_check FALSE = False"
+| "NOT_check (INPUT i) = False"
+
+text \<open>A function to calculate the longest path in a circuit\<close>
+
+fun delay where
+  "delay (NOT c) = 1 + NOT_check c"
+| "delay (AND c1 c2) = 1 + if(delay c1)>(delay c2) then (delay c1) else (delay c1)"
+| "delay (OR c1 c2) =1 + if(delay c1)>(delay c2) then (delay c1) else (delay c1)"
+| "delay TRUE = 1"
+| "delay FALSE = 1"
+| "delay (INPUT i) = 1"
+
+text \<open>A function to perform constant folding\<close>
+
+fun opt_FOLDING where
+  "opt_FOLDING (NOT TRUE) = FALSE"
+| "opt_FOLDING (NOT FALSE) = TRUE"
+| "opt_FOLDING (NOT c) = NOT (opt_FOLDING c)"
+| "opt_FOLDING (AND TRUE c) = (opt_NOT c)"
+| "opt_FOLDING (AND FALSE c) = FALSE"
+| "opt_FOLDING (AND c TRUE) = (opt_NOT c)"
+| "opt_FOLDING (AND c FALSE) = FALSE"
+| "opt_FOLDING (AND c1 c2) = AND (opt_NOT c1) (opt_NOT c2)"
+| "opt_FOLDING (OR TRUE c) = TRUE"
+| "opt_FOLDING (OR FALSE c) = (opt_NOT c)"
+| "opt_FOLDING (OR c TRUE) = TRUE"
+| "opt_FOLDING (OR c FALSE) = (opt_NOT c)"
+| "opt_FOLDING (OR c1 c2) = OR (opt_NOT c1) (opt_NOT c2)"
+| "opt_FOLDING TRUE = TRUE"
+| "opt_FOLDING FALSE = FALSE"
+| "opt_FOLDING (INPUT i) = INPUT i"
+
+text \<open>Simulating and checking\<close>
 
 value "circuit1"
+value "optDM circuit1"
 value "opt_NOT circuit1"
+value "NOT_check circuit1"
 value "circuit2"
+value "optDM circuit2"
 value "opt_NOT circuit2"
+value "NOT_check circuit2"
 value "circuit3"
+value "optDM circuit3"
 value "opt_NOT circuit3"
+value "NOT_check circuit3"
 value "circuit4"
+value "optDM circuit4"
 value "opt_NOT circuit4"
+value "NOT_check circuit4"
 
 text \<open>The following non-theorem is easily contradicted.\<close>
 
