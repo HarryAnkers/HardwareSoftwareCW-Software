@@ -29,22 +29,22 @@ program automatic write_buff_tb
 
   input_values invalues;                   // Instantiate the class
 
-  covergroup cover_a_values;              // Functional coverage point to check range of operand a values
-    coverpoint writebuf_if.a {
-      bins zero = {0};
-      bins lo   = {[1:7]};
-      bins med  = {[8:23]};
-      bins hi   = {[24:30]};
-      bins max  = {31};
-    }
-  endgroup
+  // covergroup cover_a_values;              // Functional coverage point to check range of operand a values
+  //   coverpoint writebuf_if.a {
+  //     bins zero = {0};
+  //     bins lo   = {[1:7]};
+  //     bins med  = {[8:23]};
+  //     bins hi   = {[24:30]};
+  //     bins max  = {31};
+  //   }
+  // endgroup
 
-  covergroup cover_max_vals;              // Functional coverage point to check for multiplication of max values
-    coverpoint  writebuf_if.ab {
-      bins max = {maxa*maxb};
-      bins misc = default;
-    }
-  endgroup
+  // covergroup cover_max_vals;              // Functional coverage point to check for multiplication of max values
+  //   coverpoint  writebuf_if.ab {
+  //     bins max = {maxa*maxb};
+  //     bins misc = default;
+  //   }
+  // endgroup
 
 	initial begin                         // Pulse reset
     writebuf_if.rst = 0;
@@ -73,28 +73,28 @@ program automatic write_buff_tb
     writebuf_if.cb.req <= 0;
 	end
 
-  initial begin
-    // cover_a_values cova;              // Instantiate the functional coverage points
-    // cover_max_vals covmax;
-    // cova = new();
-    // covmax = new();
-    invalues = new();                   // Allocate a random operand values object
+  // initial begin
+  //   // cover_a_values cova;              // Instantiate the functional coverage points
+  //   // cover_max_vals covmax;
+  //   // cova = new();
+  //   // covmax = new();
+  //   invalues = new();                   // Allocate a random operand values object
 
-    for (test_count = 0; test_count < 128;test_count++)
-    begin
-      @writebuf_if.cb;
-      assert (opvals.randomize) else $fatal;
-      writebuf_if.a=opvals.i;
-      writebuf_if.b=opvals.j;
-      cova.sample();                  // Collect coverage of operand a values
-      writebuf_if.cb.req <= 1;
-      wait (writebuf_if.done == 1);
-      covmax.sample();                // Collect coverage of multiplication of maximum values
-      writebuf_if.cb.req <= 0;
-    end
-    @writebuf_if.cb;
-    $finish;
-  end
+  //   for (test_count = 0; test_count < 128;test_count++)
+  //   begin
+  //     @writebuf_if.cb;
+  //     assert (opvals.randomize) else $fatal;
+  //     writebuf_if.a=opvals.i;
+  //     writebuf_if.b=opvals.j;
+  //     cova.sample();                  // Collect coverage of operand a values
+  //     writebuf_if.cb.req <= 1;
+  //     wait (writebuf_if.done == 1);
+  //     covmax.sample();                // Collect coverage of multiplication of maximum values
+  //     writebuf_if.cb.req <= 0;
+  //   end
+  //   @writebuf_if.cb;
+  //   $finish;
+  // end
 
 endprogram
 
