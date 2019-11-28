@@ -1,4 +1,4 @@
-theory HSV_CW_1_4_CW imports Complex_Main begin
+theory HSV_CW_1_4 imports Complex_Main begin
 
 (* We use the following command to search Isabelle's library 
    for theorems that contain a particular pattern. *)
