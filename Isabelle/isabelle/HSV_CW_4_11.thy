@@ -81,7 +81,7 @@ text \<open>A function to calculate the longest path in a circuit\<close>
 fun delay where
   "delay (NOT c) = 1 + NOT_check c"
 | "delay (AND c1 c2) = 1 + ((delay c1)>(delay c2)) ? (delay c1) : (delay c2)"
-| "delay (OR c1 c2) =1 + ((delay c1)>(delay c2)) ? (delay c1) : (delay c2)"
+| "delay (OR c1 c2) = 1 + ((delay c1)>(delay c2)) ? (delay c1) : (delay c2)"
 | "delay _ = 1"
 
 text \<open>A function to calculate the area of a circuit\<close>

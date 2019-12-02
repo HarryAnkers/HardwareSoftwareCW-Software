@@ -14,10 +14,10 @@ typedef struct packed{
 
 
 class FIFO;
-    logic [32:0] queue1[$];
-    logic [7:0] size;
-    statusregisterA sregA;
-    statusregisterB sregB;
+    static logic [32:0] queue1[$];
+    static logic [7:0] size;
+    static statusregisterA sregA;
+    static statusregisterB sregB;
 
     function void FIFO(input logic [7:0] size_in=16, odd_in=1);
         size=size_in;
@@ -98,53 +98,44 @@ class FIFO;
     endfunction
 endclass
 
-module write_buffer(
-    input logic clk,
-    input logic rst,
-    input logic [31:0] HRDATA,
-    input bit HREADYOUT,
-    input bit YACK,
-    input bit PARITYSEL,
-    
-    output bit YPARITY,
-    output bit HREADY,
-    output bit YREQ,
-    output logic [31:0] data_out
-    );
+module write_buffer
+    #(parameter BUFF_SIZE = 16)     // Width of buffer
+    (writebuf_if.DUT writebuf_if);
 
     initial begin
         automatic FIFO F1 = new();
-        F1.FIFO(.size_in(16));
+        // Change this 
+        F1.FIFO(.size_in(BUFF_SIZE));
         YREQ = 1'b0;
-        HREADY = 1'b0;
+        writebuf_if.HREADY = 1'b0;
     end
 
-    always @(posedge clk or posedge rst)
-        if(rst)
+    always @(posedge writebuf_if.clk or posedge writebuf_if.rst)
+        if(writebuf_if.rst)
         begin
             F1.reset();
         end
         
-    always @ (posedge clk)
-        if(HREADYOUT == 1'b1 && HREADY == 1'b0)
+    always @ (posedge writebuf_if.clk)
+        if(writebuf_if.HREADYOUT == 1'b1 && writebuf_if.HREADY == 1'b0 && F1.depth() < BUFF_SIZE)
         begin
-            F1.push(HRDATA, PARITYSEL);
-            HREADY = 1'b1;
+            F1.push(writebuf_if.HRDATA, writebuf_if.PARITYSEL);
+            writebuf_if.HREADY = 1'b1;
         end
   
-    always @ (posedge clk)
-        if(HREADYOUT == 1'b0 && HREADY == 1'b1)
+    always @ (posedge writebuf_if.clk)
+        if(writebuf_if.HREADYOUT == 1'b0 && writebuf_if.HREADY == 1'b1)
         begin
-            HREADY = 1'b0;
+            writebuf_if.HREADY = 1'b0;
         end
 
-    always @ (posedge clk)
-        if (F1.depth() > 0 && YREQ == 1'b0 && YACK == 1'b0)
+    always @ (posedge writebuf_if.clk)
+        if (writebuf_if.YREQ == 1'b0 && writebuf_if.YACK == 1'b0 && F1.depth() > 0)
         begin
-            data_out = F1.read();
+            writebuf_if.data_out = F1.read();
             YPARITY = F1.read_parity();
 
-            if(data_out[0] == PARITYSEL)
+            if(writebuf_if.data_out[0] == writebuf_if.PARITYSEL)
             begin
                 if(YPARITY!=1'b1)
                 begin
@@ -158,14 +149,14 @@ module write_buffer(
                     F1.parity_error();
                 end
             end
-            YREQ = 1'b1;
+            writebuf_if.YREQ = 1'b1;
         end
         
-    always @ (posedge clk)  
-        if (YREQ == 1'b1 && YACK == 1'b1)
+    always @ (posedge writebuf_if.clk)  
+        if (writebuf_if.YREQ == 1'b1 && writebuf_if.YACK == 1'b1)
         begin
             F1.remove();
-            YREQ = 1'b0;
+            writebuf_if.YREQ = 1'b0;
         end
 endmodule
 
