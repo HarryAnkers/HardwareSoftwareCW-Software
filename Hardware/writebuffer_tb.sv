@@ -1,100 +1,116 @@
-// Multiplier testbench
+`include "writebuffer_tb_interface.sv"
+`include "writebuffer.v"
+`include "writebuffer_model.sv"
+`include "writebuffer_randomvalues.sv"
 
+class randon_values;
 
-program automatic write_buff_tb
-    #(parameter BUFF_SIZE = 16)     // Width of buffer
-    (writebuf_if.TEST writebuf_if); 
-       
-	parameter int buffer_size = BUFF_SIZE;  // maximum value of operand a
+    rand bit HWRITE;
+    rand bit HSEL;
+    rand bit [1:0] HTRANS;
+    rand bit [2:0] HSIZE;
+    rand bit [31:0] HWDATA;
+    rand bit [31:0] HADDR;
+    rand bit PARTYSEL;
+    rand bit HREADY;
+    
+    rand bit YACK;
+    
+    constraint input_range{
+        HWRITE inside {0,1}; 
+        HSEL dist {0:=1, 1:=4};
+        HSEL inside {0,1}; HSEL dist {0:=2, 1:=8};
+        HTRANS = 1'b1;
+        HSIZE = 1'b1;
+        HADDER inside {0,1};
+        PARITYSEL = 1'b1;
+        HREADY = 1'b1;
+    
+        YACK inside {[0:7]};
+        YACK dist {
+            [0:0] := 10,
+            [1:2] := 50,
+            [3:3] := 30,
+            [4:5] := 10
+        };
+    }
+endclass
 
-  integer test_count;                 // Counter for number of operand pairs to test
- 
-  class input_values;                   // Declare a class to randomise the operand values
-    rand logic [32:0]	i;
-    static logic [32:0] test_queue[$];
-//        int count = 0;                      // Uncomment these 6 lines to force multiplication of max values every 100th test
-//	 constraint c_maxa {(count%100 == 0) -> i==maxa;}
-//         constraint c_maxb {(count%100 == 0) -> j==maxb;}
-//         function void post_randomize();
-//           count++;
-//         endfunction
-    function void add_input_to_list();
-      test_queue.push_back(i);
-    endfunction
+class random_delay;
+    
+    rand bit [2:0] YACK_DELAY;
 
-    function logic [32:0] get_element_i();
-      return test_queue[i]
-    endfunction
-  endclass
+    constraint delay{   
+        YACK inside {[0:7]};
+        YACK dist {
+            [0:0] := 10,
+            [1:2] := 50,
+            [3:3] := 30,
+            [4:5] := 10
+    }
 
-  input_values invalues;                   // Instantiate the class
+program automatic write_buffer_tb(
+    writebuffer_if.TEST wb_if_model, 
+    writebuffer_if.TEST wb_if_dut,
+);
 
-  // covergroup cover_a_values;              // Functional coverage point to check range of operand a values
-  //   coverpoint writebuf_if.a {
-  //     bins zero = {0};
-  //     bins lo   = {[1:7]};
-  //     bins med  = {[8:23]};
-  //     bins hi   = {[24:30]};
-  //     bins max  = {31};
-  //   }
-  // endgroup
-
-  // covergroup cover_max_vals;              // Functional coverage point to check for multiplication of max values
-  //   coverpoint  writebuf_if.ab {
-  //     bins max = {maxa*maxb};
-  //     bins misc = default;
-  //   }
-  // endgroup
-
-	initial begin                         // Pulse reset
-    writebuf_if.rst = 0;
-    #500 
-      muwritebuf_ifltif.rst = 1;
+    //Reset after 1000ns seconds
+	initial begin
+		wb_if_model.hRESETn = 0;
+        wb_if_dut.hRESETn = 0;
+		#1000 wb_if_model.hRESETn = 1;
+        #1000 wb_if_dut.hRESETn = 1;
 	end
 
-	initial begin                         // Initial check of multiplier
-		#450
-		writebuf_if.cb_out.YACK <= 1;
+    //Number of random combinations tried
 
-		writebuf_if.HRDATA = 5;
-    writebuf_if.PARITYSEL = 0
-		writebuf_if.cb_in.HREADYOUT <= 0;
-		wait (HREADY == 1);
-    writebuf_if.cb.req <= 0;
-		wait (HREADY == 0);
+    logic [5:0] count;
+    logic [2:0] delay 
+    randomvalues randval;
+    random_delay randdel;
 
-		writebuf_if.cb_out.YACK <= 0;
-		wait (YREQ == 1);
+    //set the inputs of both the model and dut to the same random values and 
+    //keep them at those values until the output is read 
+    initial begin
+        for (count = 0; count < 20; count=count+1) begin
+            randval = new()
+            
+            assert (randval.randomize) else $fatal;
+            
+            wb_if_model.HWRITE = randval.HWRITE;
+            wb_if_model.HSEL = randval.HSEL;
+            wb_if_model.HTRANS = randval.HTRANS;
+            wb_if_model.HSIZE = randval.HSIZE;
+            wb_if_model.HWDATA = randval.HWDATA;
+            wb_if_model.HADDR = randval.HADDR;
+            wb_if_model.PARTYSEL = randval.PARTYSEL;
+            wb_if_model.HREADY = randval.HREADY;
 
-		$display ("push and pulled result = %0d, expected result 5", multwritebuf_if.YDATA);
-		$display ("push and pulled parity = %0d, expected result 0", multwritebuf_if.YPARITY);
-    writebuf_if.cb.YACK <= 1;
-		wait (YREQ == 0);
-    writebuf_if.cb.req <= 0;
-	end
+            wb_if_dut.HWRITE = randval.HWRITE;
+            wb_if_dut.HSEL = randval.HSEL;
+            wb_if_dut.HTRANS = randval.HTRANS;
+            wb_if_dut.HSIZE = randval.HSIZE;
+            wb_if_dut.HWDATA = randval.HWDATA;
+            wb_if_dut.HADDR = randval.HADDR;
+            wb_if_dut.PARTYSEL = randval.PARTYSEL;
+            wb_if_dut.HREADY = randval.HREADY;
+            wait(wb_if_model.YACK == 1'b1 && wb_if_dut.YACK == 1'b1)
+        end
+        $finish
+    end 
 
-  // initial begin
-  //   // cover_a_values cova;              // Instantiate the functional coverage points
-  //   // cover_max_vals covmax;
-  //   // cova = new();
-  //   // covmax = new();
-  //   invalues = new();                   // Allocate a random operand values object
+    inital begin
+        randdel = new();
+        @(posedge wb_if_dut.HCLK)
+        delay = randdel.delay;
 
-  //   for (test_count = 0; test_count < 128;test_count++)
-  //   begin
-  //     @writebuf_if.cb;
-  //     assert (opvals.randomize) else $fatal;
-  //     writebuf_if.a=opvals.i;
-  //     writebuf_if.b=opvals.j;
-  //     cova.sample();                  // Collect coverage of operand a values
-  //     writebuf_if.cb.req <= 1;
-  //     wait (writebuf_if.done == 1);
-  //     covmax.sample();                // Collect coverage of multiplication of maximum values
-  //     writebuf_if.cb.req <= 0;
-  //   end
-  //   @writebuf_if.cb;
-  //   $finish;
-  // end
-
-endprogram
-
+        wb_if_model.YACK = 1'b0;
+        wb_if_dut.YACK = 1'b0;
+        wait(wb_if_dut.YREQ == 1'b1 && wb_if_model.YREQ == 1'b1)
+        #delay
+        wb_if_model.YACK = 1'b1;
+        wb_if_dut.YACK = 1'b1;
+        #1
+        wb_if_model.YACK = 1'b0;
+        wb_if_dut.YACK = 1'b0;
+    end
