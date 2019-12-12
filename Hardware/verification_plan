@@ -1,0 +1,23 @@
+Verification Plan
+
+
+Random Testing - Once we had written the writebuffer we first set out to test it using random verification. To do this we first created a model in system verilog that could mimic the behavior of the right buffer that takes the same variables as inputs and outputs the same values we expect our writebuffer to on a given set of inputs. Once we had finished this we created a test bench around the two to see if they gave the same outputs when identical inputs are put in to them both. The first stage of this was to create an interface with all the input and out variables with a clocking block to create a random skew similar to that on a real circuit. We created two modports in this interface, one for the model and one for our writebuff, the design under test (dut), these only varied in that the modport for the test had the clocking passed to it and the modport for the dut had just the clock. We then created two instances of these interface was passed as input to the model, one to the dut and both were passed to the test bench to have the input values set. Our test bench created random values for each input variable subject to a set of constraints so that no values that could never be passed in reality are set as inputs. We set further constraints so more likely inputs, such as the write buffer is written to more than the status registers are read, occurred more frequently than those that are less likely in the real system. Once these random values had been generated we then set the inputs on both interfaces to these values and then waited until the YACK sigal had been put high on both interfaces before generating the next set of random variables. Before this change the inputs are held constant and a random delay is generated for the time until the YACK signal is asserted and confirming the data has been read. This process is repeated over and over with all variables on both interfaces being constantly compared and if the model and dut set variables to different values at anypoint an error is set identifying which variables from the dut and model don’t match. 
+
+We would like to further improve this verification by injecting a bug in to the system at random points and ensuring it is picked by the test bench, this proves that it is finding the mistakes and not just passing everything.
+
+We then wanted to test cases that might not have come up in the random testing but are likely to cause issues. The end cases we wanted to test included reading from the buffer when it was empty, reading from the buffer when it was full, writing the buffer when it is empty and writing when it is full. These cases could have come up in the random testing but we wanted to be sure they were properly tested.
+
+We then would then like to test the writebuffer within the whole system and ensure this all functions correctly using the assembly code written. We would then move on to do formal verification of the system using jaspergold then finally functional and code coverage.   
+
+Unfortunately due to time constraints and both having other exams we weren’t able to complete the verification process.  
+
+
+
+  
+
+
+
+
+
+ 
+
